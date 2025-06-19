@@ -1,9 +1,9 @@
-import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
+export const orders = sqliteTable("orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   mall: text("mall").notNull(), // 쇼핑몰 정보 (1열)
   gameName: text("game_name").notNull(), // 게임명 (2열)
   productName: text("product_name").notNull(), // 상품명 (3열)
@@ -27,16 +27,16 @@ export const orders = pgTable("orders", {
   column18: text("column_18"),
   column19: text("column_19"),
   column20: text("column_20"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: integer("created_at", { mode: 'timestamp' }),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }),
 });
 
-export const logs = pgTable("logs", {
-  id: serial("id").primaryKey(),
+export const logs = sqliteTable("logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id").references(() => orders.id),
   action: text("action").notNull(),
   value: text("value").notNull(),
-  timestamp: timestamp("timestamp").defaultNow(),
+  timestamp: integer("timestamp", { mode: 'timestamp' }),
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
@@ -55,15 +55,18 @@ export type Order = typeof orders.$inferSelect;
 export type InsertLog = z.infer<typeof insertLogSchema>;
 export type Log = typeof logs.$inferSelect;
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+// User schema for basic user management
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").unique(),
+  createdAt: integer("created_at", { mode: 'timestamp' }),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
-  password: true,
+  email: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
